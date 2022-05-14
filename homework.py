@@ -35,11 +35,13 @@ logger.addHandler(handler)
 
 class MessageError:
     """Ошибка отправки сообщения."""
+
     pass
 
 
 class TokenError:
     """Ошибка в переменных окружения."""
+
     pass
 
 
