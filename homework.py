@@ -37,6 +37,7 @@ handler.setFormatter(formatter)
 
 class MessageError(Exception):
     """Ошибка отправки сообщения."""
+
     logging.basicConfig(
         level=logging.INFO,
         filename='exceptions.py',
