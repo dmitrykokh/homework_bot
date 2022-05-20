@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import time
+from logging.handlers import RotatingFileHandler
 
 import dotenv
 import requests
@@ -26,6 +27,12 @@ VERDICTS = {
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+handler = RotatingFileHandler(
+    'exceptions.py',
+    maxBytes=50000000,
+    backupCount=5
+)
+logger.addHandler(handler)
 handler = logging.StreamHandler(stream=sys.stdout)
 logger.addHandler(handler)
 formatter = logging.Formatter(
@@ -38,13 +45,7 @@ handler.setFormatter(formatter)
 class MessageError(Exception):
     """Ошибка отправки сообщения."""
 
-    logging.basicConfig(
-        level=logging.INFO,
-        filename='exceptions.py',
-        format='%(asctime)s, %(levelname)s, %(name)s, '
-    )
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.ERROR)
+    pass
 
 
 class TokenError:
@@ -139,7 +140,7 @@ def main():
     """Основная логика работы бота."""
     if not check_tokens():
         logger.critical('Ошибка в переменных окружения')
-        raise sys.exit('Ошибка в переменных окружения')
+        sys.exit('Ошибка в переменных окружения')
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = time.time()
     last_status = None
@@ -147,7 +148,7 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homework = check_response(response)
+            homework = check_response(response)[0]
             homework_status = homework.get('status')
             if homework_status != last_status:
                 last_status = homework_status
@@ -160,7 +161,6 @@ def main():
             message = f'Сбой в работе программы: {error}'
             logger.error(message, exc_info=True)
             if str(error) != last_error:
-                send_message(bot, error)
                 last_error = str(error)
             logger.error(error)
         finally:
