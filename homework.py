@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import time
-from logging.handlers import RotatingFileHandler
+from exceptions import MessageError, NoInternetException, TokenError
 
 import dotenv
 import requests
@@ -27,12 +27,6 @@ VERDICTS = {
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-handler = RotatingFileHandler(
-    'exceptions.py',
-    maxBytes=50000000,
-    backupCount=5
-)
-logger.addHandler(handler)
 handler = logging.StreamHandler(stream=sys.stdout)
 logger.addHandler(handler)
 formatter = logging.Formatter(
@@ -40,18 +34,6 @@ formatter = logging.Formatter(
     '%(funcName)s, %(levelno)s, %(message)s'
 )
 handler.setFormatter(formatter)
-
-
-class MessageError(Exception):
-    """Ошибка отправки сообщения."""
-
-    pass
-
-
-class TokenError:
-    """Ошибка в переменных окружения."""
-
-    pass
 
 
 def send_message(bot, message):
@@ -73,8 +55,8 @@ def get_api_answer(current_timestamp):
         response = requests.get(
             ENDPOINT, params=params, headers=HEADERS
         )
-    except ValueError as error:
-        raise error
+    except NoInternetException as error:
+        raise NoInternetException(f'{error} нет интернета')
     error_message = (
         f'Авторизация не пройдена {HEADERS}, \n'
         f'Эндпоинт {ENDPOINT}, текущее время {timestamp}, \n'
@@ -148,8 +130,12 @@ def main():
     while True:
         try:
             response = get_api_answer(current_timestamp)
-            homework = check_response(response)[0]
-            homework_status = homework.get('status')
+            if not check_response(response):
+                logger.error('Список домашек пуст')
+                raise IndexError('Домашняя работа не найдена!')
+            else:
+                homework = check_response(response)[0]
+                homework_status = homework.get('status')
             if homework_status != last_status:
                 last_status = homework_status
                 message = parse_status(homework)
@@ -157,7 +143,13 @@ def main():
             else:
                 logger.debug('Статус работы не изменился')
                 current_timestamp = homework.get('current timestamp')
-        except (Exception, MessageError) as error:
+        except NoInternetException as error:
+            raise NoInternetException(f'{error} нет интернета')
+        except TokenError as error:
+            raise TokenError(f'{error} Ошибка в переменных окружения.')
+        except MessageError as error:
+            print(f'{error} Ошибка при отправке сообщения')
+        except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message, exc_info=True)
             if str(error) != last_error:
