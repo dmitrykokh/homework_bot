@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import time
-from exceptions import MessageError, NoInternetException, TokenError
+from exceptions import MessageError, NoInternetException
 
 import dotenv
 import requests
@@ -143,10 +143,6 @@ def main():
             else:
                 logger.debug('Статус работы не изменился')
                 current_timestamp = homework.get('current timestamp')
-        except NoInternetException as error:
-            raise NoInternetException(f'{error} нет интернета')
-        except TokenError as error:
-            raise TokenError(f'{error} Ошибка в переменных окружения.')
         except MessageError as error:
             print(f'{error} Ошибка при отправке сообщения')
         except Exception as error:
