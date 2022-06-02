@@ -55,7 +55,7 @@ def get_api_answer(current_timestamp):
         response = requests.get(
             ENDPOINT, params=params, headers=HEADERS
         )
-    except NoInternetException as error:
+    except requests.exceptions.RequestException as error:
         raise NoInternetException(f'{error} нет интернета')
     error_message = (
         f'Авторизация не пройдена {HEADERS}, \n'
@@ -125,16 +125,16 @@ def main():
         sys.exit('Ошибка в переменных окружения')
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = time.time()
+    response = get_api_answer(current_timestamp)
+    homework_list = check_response(response)
     last_status = None
     last_error = None
     while True:
         try:
-            response = get_api_answer(current_timestamp)
-            if not check_response(response):
-                logger.error('Список домашек пуст')
-                raise IndexError('Домашняя работа не найдена!')
+            if not homework_list:
+                logger.debug('Список домашек пуст')
             else:
-                homework = check_response(response)[0]
+                homework = homework_list[0]
                 homework_status = homework.get('status')
             if homework_status != last_status:
                 last_status = homework_status
