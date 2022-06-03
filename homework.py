@@ -125,12 +125,12 @@ def main():
         sys.exit('Ошибка в переменных окружения')
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = time.time()
-    response = get_api_answer(current_timestamp)
-    homework_list = check_response(response)
     last_status = None
     last_error = None
     while True:
         try:
+            response = get_api_answer(current_timestamp)
+            homework_list = check_response(response)
             if not homework_list:
                 logger.debug('Список домашек пуст')
             else:
