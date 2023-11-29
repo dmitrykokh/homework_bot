@@ -15,7 +15,7 @@
       {
          "id":123,
          "status":"approved",
-         "homework_name":"egorcoders__homework_bot-master.zip",
+         "homework_name":"dmitrykokh__homework_bot-master.zip",
          "reviewer_comment":"Всё нравится",
          "date_updated":"2021-12-14T14:40:57Z",
          "lesson_name":"Итоговый проект"
